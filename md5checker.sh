@@ -1,12 +1,15 @@
 #!/bin/sh -
 
 PATH_TO_CHECK='/home'
+#PATH_TO_CHECK=''
 PATH_ONLY_BIN=false
 
 PACKAGES_TO_CHECK='nginx nginx-full'
+#PACKAGES_TO_CHECK=''
 PACKAGES_ONLY_BIN=false
 
 FILES_TO_CHECK='/home/test /home/test2'
+#FILES_TO_CHECK=''
 
 #PACKAGES
 for i in $PACKAGES_TO_CHECK
