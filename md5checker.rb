@@ -9,6 +9,9 @@ require 'yaml'
 require 'digest/md5'
 require 'colored'
 require 'find'
+require 'net/http'
+require 'net/https'
+require 'mail'
 
 options = {}
 
@@ -65,6 +68,11 @@ subcommands = {
     opts.on("-c", "--config [FILE]", "Configuration file") do |c|
       options[:configfile] = c || 'md5checker.conf.yml'
     end
+    
+    options[:sourcefile] = false
+    opts.on("-s", "--source FILE", "Get source file from disk instead of downloading it") do |s|
+      options[:sourcefile] = s
+    end
   end
 }
 
@@ -78,20 +86,19 @@ rescue => e
   exit 1
 end 
 
+if ! File.exist?(options[:configfile])
+  puts "ERROR: Can't find config file: #{options[:configfile]}".red
+  exit 1
+end
+
+begin
+  config = YAML.load_file(options[:configfile])
+rescue
+  puts "ERROR: Can't parse config file: #{options[:configfile]}".red
+  exit 1
+end
 
 if command == 'create'
-
-  if ! File.exist?(options[:configfile])
-    puts "ERROR: Can't find config file: #{options[:configfile]}".red
-    exit 1
-  end
-
-  begin
-    config = YAML.load_file(options[:configfile])
-  rescue
-    puts "ERROR: Can't parse config file: #{options[:configfile]}".red
-    exit 1
-  end
 
   File.rename(options[:outputfile],"#{options[:outputfile]}.#{Time.now.to_i}") if File.exist?(options[:outputfile])
   outputfile=File.open(options[:outputfile],'a')
@@ -161,7 +168,53 @@ if command == 'create'
   puts "\nFILE: #{options[:outputfile]} was created.".green
 
 elsif command == 'check'
-  puts 'check'
-end
+  
+  errors = []
 
+  if options[:sourcefile]
+    if ! File.exists?(options[:sourcefile])
+      puts "ERROR: Can't find source file: #{options[:sourcefile]}".red
+      exit 1
+    end
+    sourcefile = File.read(options[:sourcefile])
+  else
+    begin
+      uri = URI(config['md5sum-file-url'])
+      http = Net::HTTP.new(uri.host,uri.port)
+      http.use_ssl = true if uri.scheme == 'https'
+      request = Net::HTTP::Get.new(uri.path)
+      response = http.start {|http| http.request(request)}
+      sourcefile = response.body
+    rescue
+      puts "ERROR: Can't download source file from: #{config['md5sum-file-url']}".red
+      exit 1
+    end
+  end
+
+  sourcefile.split("\n").each do |line|
+    md5,file = line.split
+    if ! File.exists?(file)
+      puts "WARNING: No such file: #{file}".yellow
+      next
+    end
+    if Digest::MD5.hexdigest(File.read(file)) != md5
+      puts "WARNING: #{file} - NOT OK!".yellow
+      errors << file
+    end
+  end
+  puts "...done".green
+  if config['notification-from'] and config['notification-to']
+    begin
+      mail = Mail.new do 
+        from     config['notification-from']
+        to       config['notification-to']
+        subject  "MD5CHECKER on #{Socket.gethostname}"
+        body     "MD5 sums are different for:\n#{errors.join("\n")}"
+      end
+      mail.deliver
+    rescue
+      puts "WARNING: Can't sent email".yellow
+    end
+  end
+end
 

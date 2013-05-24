@@ -1,20 +1,19 @@
 ---
-#package-manager: rpm
-package-manager: dpkg
+package-manager: rpm
+#package-manager: dpkg
     
 packages:
  - nginx
- - nginx-full
- - nginx-common
-packages-only-bin: false
+packages-only-bin: true
 
 path:
- - /home
+ - /home/faja/bin
 path-only-bin: false
 
 files:
- - /home/test_file
- - /home/test_link
+# - /home/test_file
+# - /home/test_link
 
-#notification: mcabaj@gmail.com
-#md5sum-file-url: https://github.com/faja/test
+notification-from: security@example.com
+notification-to: mcabaj@gmail.com
+md5sum-file-url: https://raw.github.com/faja/md5checker/master/source.file.test

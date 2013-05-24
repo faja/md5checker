@@ -22,7 +22,8 @@ Create options:
 * 'files' - set list of files   
 
 Check options:
-* 'notification' - email address for notification
+* 'notification-from' - 'FROM' email address for notification (comment it out to disable email notification)
+* 'notification-to' - 'TO' email address for notification (comment it out to disable email notification)
 * 'md5sum-file-url' - url of the result file
 
 
