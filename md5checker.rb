@@ -198,14 +198,14 @@ elsif command == 'check'
       next
     end
     if Digest::MD5.hexdigest(File.read(file)) != md5
-      puts "WARNING: #{file} - NOT OK!".yellow
+      puts "ERROR: #{file} - NOT OK!".red
       errors << file
     end
   end
   puts "...done".green
-  if config['notification-from'] and config['notification-to']
+  if config['notification-from'] and config['notification-to'] and errors.any?
     begin
-      mail = Mail.new do 
+      mail = Mail.new do
         from     config['notification-from']
         to       config['notification-to']
         subject  "MD5CHECKER on #{Socket.gethostname}"
@@ -214,7 +214,9 @@ elsif command == 'check'
       mail.deliver
     rescue
       puts "WARNING: Can't sent email".yellow
+      exit 2
     end
   end
+  exit 1 if errors.any?
 end
 
