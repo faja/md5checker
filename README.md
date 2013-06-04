@@ -8,8 +8,11 @@ You can choose which files should be checked by defining:
 
 After creating md5checker.out file, put it on secured website.
 Once a day you can run './md5checker.rb check' command,
-which will download result file from your website, compare md5 values and let you know if some sums are wrong.
+which will download result file from your website, compare md5 values and let you know if some sums are wrong.   
 
+###Requirements
+* ruby 
+* gems: colored, mail
 
 ###Configuration
 Configuration is straight forward.   
